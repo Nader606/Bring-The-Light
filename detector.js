@@ -92,8 +92,6 @@ function draw() {
 
     // Display webcam feed with filters
     push();
-    //translate(width, 0);
-    //scale(-1, 1);
     image(webcamVideo, 0, 0, width, height);
     //filter(BLUR, 0.5);
     filter(GRAY);
@@ -101,20 +99,11 @@ function draw() {
 
     pop();
 
-    // Load pixels after filters are applied
-
-
     // Process detections
     if (frameCount % 10 === 0) {
         performObjectDetection();
     }
     drawDetections();
-
-    //push();
-    //blendMode(ADD);
-    //particleSystem.update();
-    //pop();
-
 
 }
 
@@ -198,12 +187,6 @@ function drawDetection(det) {
         const scaledWidth = bboxWidth * scaleX;
         const scaledHeight = bboxHeight * scaleY;
 
-        // Draw scaled bounding box
-        stroke(255, 0, 0);
-        strokeWeight(2);
-        noFill();
-        rect(scaledX, scaledY, scaledWidth, scaledHeight);
-
         // Use scaled coordinates for edge detection
         const padding = 10;
         const startX = Math.max(1, Math.floor(scaledX - padding));
@@ -277,22 +260,6 @@ function drawDetection(det) {
         // Remove used edge to avoid spawning multiple particles at the same spot
         silhouetteEdges.splice(edgeIndex, 1);
     }
-    /* // Randomly select from detected edges
-    for (let i = 0; i < maxParticlesPerFrame && silhouetteEdges.length > 0; i++) {
-        const edgeIndex = Math.floor(random(silhouetteEdges.length));
-        const edge = silhouetteEdges[edgeIndex];
-        
-        if (webcamVideo.pixels[(edge.y * CANVAS_WIDTH + edge.x) * 4] < 50) { // Verify it's still in the silhouette
-            // Create a slightly randomized direction vector
-            const randomAngle = random(-PI/4, PI/4);
-            const direction = edge.direction.copy().rotate(randomAngle);
-            
-            particleSystem.addParticle(edge.x, edge.y, direction);
-            
-        }
-        
-        
-    } */
 }
 
 /**

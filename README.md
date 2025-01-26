@@ -54,3 +54,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 - [p5.js](https://p5js.org/)
 - [TensorFlow.js](https://www.tensorflow.org/js)
 - [COCO-SSD Model](https://github.com/tensorflow/tfjs-models/tree/master/coco-ssd)
+- [Edge Detection Live! (it works omg)](https://editor.p5js.org/maalvikabhat2027/sketches/RgdVO9_yI)
+- [Nature of code](https://natureofcode.com/)
+- [Finding the Edges (Sobel Operator) - Computerphile](https://www.youtube.com/watch?v=uihBwtPIBxM)
