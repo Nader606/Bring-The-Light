@@ -8,6 +8,19 @@ This project is a real-time visualization of particles following the edges of de
 - **Edge Detection**: Applies Sobel operators to detect edges within the bounding box of detected objects.
 - **Particle System**: Particles are generated along the detected edges and move in a flow field-like behavior.
 - **Dynamic Visualization**: Particles continuously follow the moving edges, creating a visually engaging effect.
+- **Edge Detection & Following**: 
+    - Particles are attracted to and follow the nearest edges, creating a responsive system that adapts to its environment.
+    - **Edge Detection**: is achieved by calculating the distance between particles and predefined edge points. Particles that are too far from the edges are removed and respawned closer to the edge.
+- **Flocking Behavior**: Particles exhibit flocking behavior using three key principles: 
+    - **Separation**: Avoiding crowding and maintaining personal space by steering away from nearby particles. 
+    - **Alignment**: Aligning with the velocity (direction and speed) of neighboring particles, creating cohesion within the flock. 
+    - **Cohesion**: Steering toward the average position of nearby particles, helping the flock stay together.
+- **Flow Field Influence**: 
+    - A noise-based **flow field** is applied to guide particle movement, giving the system a more organic, fluid-like behavior. 
+    - The flow field updates every 10 frames to improve performance while still providing dynamic movement patterns.
+- **Particle Tail & Glow**: 
+    - Each particle leaves a trail, representing its path over time. The tail gradually fades as the particle moves, creating a fluid-like motion. 
+    - Particles have a glow effect that becomes more pronounced with distance from the particle’s center.
 
 ## Technologies Used
 

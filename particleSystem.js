@@ -10,7 +10,7 @@ class Particle {
         this.maxHistoryLength = 20;
 
         // Create a base color with random variations
-        const hue = random(0, 30); // Warm colors
+        const hue = random(0, 30);  // Warm colors
         const saturation = random(80, 100);
         const brightness = random(90, 100);
         colorMode(HSB, 100);
@@ -48,37 +48,30 @@ class Particle {
         pop();
     }
 
-    update(target, flowField) {
-        // Move toward the target edge point
-        let force = p5.Vector.sub(target.position, this.pos);
-        force.setMag(0.5); // Increase speed of attraction (was 0.1)
-        this.acc.add(force);
+    update(target, flowField, particles) {
+        // Flocking behavior
+        let separation = this.separate(particles);
+        let alignment = this.align(particles);
+        let cohesion = this.cohere(particles);
 
-        // Add the direction vector from the edge
-        this.acc.add(target.direction);
+        // Edge following
+        let edgeForce = p5.Vector.sub(target.position, this.pos);
+        edgeForce.setMag(0.5); // Stronger attraction to edges
 
-        // Apply flow field effect
-        const flowForce = flowField.lookup(this.pos);
-        flowForce.mult(1.5); // Amplify flow field influence
-        this.acc.add(flowForce);
+        // Apply forces
+        this.acc.add(separation.mult(1.5)); // Separation is usually stronger
+        this.acc.add(alignment);
+        this.acc.add(cohesion);
+        this.acc.add(edgeForce.mult(2)); // Prioritize edge following
+        this.acc.add(target.direction); // Follow edge direction
+        this.acc.add(flowField.lookup(this.pos)); // Flow field effect
 
-        // Update velocity and position
         this.vel.add(this.acc);
-
-        // Set a minimum speed for the particles
-        if (this.vel.mag() < 2) {
-            this.vel.setMag(2); // Ensure minimum speed
-        }
-
-        // Optional: Limit the maximum speed
-        this.vel.limit(10); // Adjust as needed for smoothness
-
         this.pos.add(this.vel);
 
         // Gradually slow down
-        this.vel.mult(0.98); // Slightly reduce damping (was 0.95)
+        this.vel.mult(0.95);
 
-        // Reset acceleration
         this.acc.mult(0);
 
         // Update the tail history
@@ -86,6 +79,88 @@ class Particle {
         if (this.history.length > this.maxHistoryLength) {
             this.history.shift(); // Remove the oldest position
         }
+    }
+
+    separate(particles) {
+        let desiredSeparation = 25;
+        let steer = createVector(0, 0);
+        let count = 0;
+
+        for (let other of particles) {
+            let d = p5.Vector.dist(this.pos, other.pos);
+            if (d > 0 && d < desiredSeparation) {
+                let diff = p5.Vector.sub(this.pos, other.pos);
+                diff.normalize();
+                diff.div(d); // Weight by distance
+                steer.add(diff);
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            steer.div(count);
+        }
+
+        if (steer.mag() > 0) {
+            steer.setMag(1);
+            steer.sub(this.vel);
+            steer.limit(0.1);
+        }
+
+        return steer;
+    }
+
+    align(particles) {
+        let neighborDist = 50;
+        let sum = createVector(0, 0);
+        let count = 0;
+
+        for (let other of particles) {
+            let d = p5.Vector.dist(this.pos, other.pos);
+            if (d > 0 && d < neighborDist) {
+                sum.add(other.vel);
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            sum.div(count);
+            sum.setMag(1);
+            let steer = p5.Vector.sub(sum, this.vel);
+            steer.limit(0.1);
+            return steer;
+        } else {
+            return createVector(0, 0);
+        }
+    }
+
+    cohere(particles) {
+        let neighborDist = 50;
+        let sum = createVector(0, 0);
+        let count = 0;
+
+        for (let other of particles) {
+            let d = p5.Vector.dist(this.pos, other.pos);
+            if (d > 0 && d < neighborDist) {
+                sum.add(other.pos);
+                count++;
+            }
+        }
+
+        if (count > 0) {
+            sum.div(count);
+            return this.seek(sum);
+        } else {
+            return createVector(0, 0);
+        }
+    }
+
+    seek(target) {
+        let desired = p5.Vector.sub(target, this.pos);
+        desired.setMag(1);
+        let steer = p5.Vector.sub(desired, this.vel);
+        steer.limit(0.1);
+        return steer;
     }
 }
 
@@ -95,6 +170,7 @@ class FlowField {
         this.cols = floor(width / this.resolution);
         this.rows = floor(height / this.resolution);
         this.field = this.make2DArray(this.cols, this.rows);
+        this.updateRate = 10; // Update every 10 frames
         this.init();
     }
 
@@ -107,7 +183,7 @@ class FlowField {
     }
 
     init() {
-        noiseDetail(8, 0.65);
+        noiseDetail(4, 0.5);
         for (let i = 0; i < this.cols; i++) {
             for (let j = 0; j < this.rows; j++) {
                 let angle = noise(i * 0.1, j * 0.1) * TWO_PI * 4;
@@ -126,7 +202,7 @@ class FlowField {
 class ParticleSystem {
     constructor() {
         this.particles = [];
-        this.maxParticles = 500;
+        this.maxParticles = 300;
         this.flowField = new FlowField(20); // Initialize flow field
     }
 
@@ -157,7 +233,7 @@ class ParticleSystem {
                     );
                 } else {
                     // Update particle to move towards the nearest edge
-                    particle.update(nearestEdge, this.flowField);
+                    particle.update(nearestEdge, this.flowField, this.particles);
                     particle.display();
                 }
             }
